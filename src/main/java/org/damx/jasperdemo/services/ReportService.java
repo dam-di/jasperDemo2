@@ -141,6 +141,36 @@ public class ReportService {
         }
     }
 
+    public byte[] generarReport(String reportName,  Map<String, Object> parms) throws Exception {
+        try {
+            // Verifica si la conexión con la base de datos se pudo establecer
+            if (!initDBConnection()) {
+                throw new SQLException("Error al conectar con la base de datos");
+            }
+
+            // Carga el archivo del informe Jasper (.jasper) desde el sistema de archivos
+            InputStream reportStream = new FileInputStream("src/main/resources/reports/" + reportName + ".jasper");
+
+            // Verifica si el archivo del informe existe y se cargó correctamente
+            if (reportStream == null) {
+                throw new JRException("El informe no se encontró: " + reportName);
+            }
+
+            // Rellena el informe con los datos obtenidos de la conexión a la base de datos
+            JasperPrint jasperPrint = JasperFillManager.fillReport(reportStream, parms, connection);
+            if(jasperPrint.getPages().size()>0){
+                // Exporta el informe rellenado a formato PDF y lo devuelve como un array de bytes
+                return JasperExportManager.exportReportToPdf(jasperPrint);
+            }
+            // Si el informe no tiene páginas
+            return null;
+
+        } finally {
+            // Asegura que la conexión a la base de datos se cierre en cualquier caso
+            closeDBConnection();
+        }
+    }
+
 
 
 
